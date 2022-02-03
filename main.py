@@ -1,18 +1,39 @@
-import requests
+import sys
+import clipboard
+import json
 
-API_KEY = "98d234e37cfd95092dc7eb84eebb8bf3"
-BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
+SAVED_DATA = "clipboard.json"
 
-city = input("Enter a city name: ")
-request_url = f"{BASE_URL}?appid={API_KEY}&q={city}"
-response = requests.get(request_url)
+def save_data(filepath, data):
+    with open(filepath, "w") as f:
+        json.dump(data, f)
 
-if response.status_code == 200:
-    data = response.json()
-    weather = data['weather'][0]['description']
-    temperature = round(data["main"]["temp"] - 273.15, 2)
+def load_data(filepath):
+    try:
+        with open(filepath, "r") as f:
+            data = json.load(f)
+            return data
+    except:
+        return {}
 
-    print("Weather:", weather)
-    print("Temperature:", temperature, "celsius")
+if len(sys.argv) == 2:
+    command = sys.argv[1]
+    data = load_data(SAVED_DATA)
+    if command == "save":
+        key = input("Enter a key: ")
+        data[key] = clipboard.paste()
+        save_data(SAVED_DATA, data)
+        print("data saved")
+    elif command == "load":
+        key = input("Enter a key: ")
+        if key in data:
+            clipboard.copy(data[key])
+            print("Data copied to clipboard.")
+        else:
+            print("key does not exist")
+    elif command == "list":
+        print(data)
+    else:
+        print("Unknown Command")
 else:
-    print("An error occurred.")
+    print("Please pass exactly one command.")
